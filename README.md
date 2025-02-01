@@ -7,6 +7,8 @@ A decentralized social platform for sharing and remixing audio creations. This c
 - Manage rights and permissions for remixing
 - Earn rewards from remixes of their tracks
 - Follow favorite creators
+- Create and manage playlists
+- Engage with tracks through likes and play counts
 
 ## Features
 
@@ -15,6 +17,9 @@ A decentralized social platform for sharing and remixing audio creations. This c
 - Rights management system
 - Creator rewards
 - Social following system
+- Playlist creation and management
+- Track engagement metrics
+- Like/favorite system
 
 ## Contract Functions
 
@@ -23,3 +28,18 @@ The smart contract handles:
 - Remix permissions and attribution
 - Creator profiles and following
 - Reward distribution for remixes
+- Playlist creation and management
+- Track interaction metrics
+- Social engagement features
+
+### New Features
+
+#### Playlists
+- Create public or private playlists
+- Add tracks to playlists
+- Browse other users' public playlists
+
+#### Track Interactions
+- Like/favorite tracks
+- Track play count metrics
+- View engagement statistics
