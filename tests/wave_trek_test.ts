@@ -36,66 +36,90 @@ Clarinet.test({
 });
 
 Clarinet.test({
-    name: "Can create remix of existing track",
+    name: "Can create and manage playlists",
     async fn(chain: Chain, accounts: Map<string, Account>) {
         const deployer = accounts.get('deployer')!;
-        const creator2 = accounts.get('wallet_1')!;
         
-        // First upload original track
+        // Create playlist
+        let block = chain.mineBlock([
+            Tx.contractCall('wave-trek', 'create-playlist', [
+                types.utf8("My Playlist"),
+                types.utf8("Cool tracks"),
+                types.bool(true)
+            ], deployer.address)
+        ]);
+        
+        assertEquals(block.receipts[0].result.expectOk(), types.uint(1));
+        
+        // Upload track
         chain.mineBlock([
             Tx.contractCall('wave-trek', 'upload-track', [
                 types.uint(1),
-                types.utf8("Original Track"),
+                types.utf8("Track 1"),
                 types.utf8("QmHash123"),
                 types.bool(true),
                 types.uint(100)
             ], deployer.address)
         ]);
         
-        // Create remix
-        let remixBlock = chain.mineBlock([
-            Tx.contractCall('wave-trek', 'create-remix', [
-                types.uint(2),
+        // Add track to playlist
+        let addTrackBlock = chain.mineBlock([
+            Tx.contractCall('wave-trek', 'add-track-to-playlist', [
                 types.uint(1),
-                types.utf8("Awesome Remix"),
-                types.utf8("QmHash456")
-            ], creator2.address)
+                types.uint(1)
+            ], deployer.address)
         ]);
         
-        assertEquals(remixBlock.receipts[0].result.expectOk(), true);
+        assertEquals(addTrackBlock.receipts[0].result.expectOk(), true);
     }
 });
 
 Clarinet.test({
-    name: "Can follow creator and update profile",
+    name: "Can interact with tracks through likes and plays",
     async fn(chain: Chain, accounts: Map<string, Account>) {
-        const creator1 = accounts.get('deployer')!;
-        const creator2 = accounts.get('wallet_1')!;
+        const deployer = accounts.get('deployer')!;
+        const user = accounts.get('wallet_1')!;
         
-        let block = chain.mineBlock([
-            Tx.contractCall('wave-trek', 'update-profile', [
-                types.utf8("Creator 1"),
-                types.utf8("Music Producer")
-            ], creator1.address),
-            
-            Tx.contractCall('wave-trek', 'follow-creator', [
-                types.principal(creator1.address)
-            ], creator2.address)
+        // Upload track
+        chain.mineBlock([
+            Tx.contractCall('wave-trek', 'upload-track', [
+                types.uint(1),
+                types.utf8("Track 1"),
+                types.utf8("QmHash123"),
+                types.bool(true),
+                types.uint(100)
+            ], deployer.address)
         ]);
         
-        assertEquals(block.receipts[0].result.expectOk(), true);
-        assertEquals(block.receipts[1].result.expectOk(), true);
+        // Like track
+        let likeBlock = chain.mineBlock([
+            Tx.contractCall('wave-trek', 'like-track', [
+                types.uint(1)
+            ], user.address)
+        ]);
         
-        let isFollowing = chain.callReadOnlyFn(
+        assertEquals(likeBlock.receipts[0].result.expectOk(), true);
+        
+        // Record play
+        let playBlock = chain.mineBlock([
+            Tx.contractCall('wave-trek', 'record-play', [
+                types.uint(1)
+            ], user.address)
+        ]);
+        
+        assertEquals(playBlock.receipts[0].result.expectOk(), true);
+        
+        // Check like status
+        let hasLiked = chain.callReadOnlyFn(
             'wave-trek',
-            'is-following',
+            'has-liked-track',
             [
-                types.principal(creator2.address),
-                types.principal(creator1.address)
+                types.principal(user.address),
+                types.uint(1)
             ],
-            creator1.address
+            user.address
         );
         
-        isFollowing.result.expectOk().expectBool(true);
+        hasLiked.result.expectOk().expectBool(true);
     }
 });
